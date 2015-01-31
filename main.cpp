@@ -6,15 +6,7 @@
 
 #include <cmath>
 #include <cstring>
-
-class BriefRIDescriptorExtractor: public cv::BriefDescriptorExtractor{
-public:
-    BriefRIDescriptorExtractor( int bytes = 32 )
-    : cv::BriefDescriptorExtractor( bytes ) {
-    }
-};
-
-
+#include "brief_ri.h"
 
 using namespace std;
 using namespace cv;
@@ -52,7 +44,8 @@ int main(int argc, char **argv){
 		return -1;
 	}
 
-	Ptr<DescriptorExtractor> extractor = new BriefRIDescriptorExtractor;
+    BriefRIDescriptorExtractor extractor;
+    extractor.rotatePattern( 30 );
     Ptr<DescriptorMatcher> matcher = new BFMatcher( NORM_HAMMING, true );
 
 	vector< KeyPoint > kp1;
@@ -60,14 +53,14 @@ int main(int argc, char **argv){
 	sort( kp1.begin(), kp1.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp1.resize( MAX_FAST_FEATURES );
 	Mat desc1;
-	extractor->compute( im1, kp1, desc1 );
+	extractor.compute( im1, kp1, desc1 );
 
 	vector< KeyPoint > kp2;
 	FAST( im2, kp2, FAST_THRESH );
 	sort( kp2.begin(), kp2.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp2.resize( MAX_FAST_FEATURES );
 	Mat desc2;
-	extractor->compute( im2, kp2, desc2 );
+	extractor.compute( im2, kp2, desc2 );
 
 	vector< DMatch > matches;
 	matcher->match( desc1, desc2, matches );
