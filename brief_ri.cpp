@@ -39,16 +39,19 @@ static void pixelTests32(const Mat& img, const std::vector<KeyPoint>& keypoints,
 		// get rotation matrix
 		Mat M = getRotationMatrix2D( center, angle, 1.0 );
 		Mat rotated; 
-		warpAffine( roi, rotated, M, roi.size(), INTER_CUBIC );
+		warpAffine( roi, rotated, M, roi.size(), INTER_LINEAR );
 		Mat cropped;
 		getRectSubPix( rotated, rRect.size, center, cropped );
 		// debug
-		// imshow("roi", roi );
-		// waitKey();
-		// imshow("rotated", rotated );
-		// waitKey();
-		// imshow("cropped", cropped );
-		// waitKey();
+// #define _DEBUG
+#ifdef _DEBUG
+		imshow("roi", roi );
+		waitKey();
+		imshow("rotated", rotated );
+		waitKey();
+		imshow("cropped", cropped );
+		waitKey();
+#endif
 		
         for ( size_t j = 0; j < 32; ++j ){
             desc[ j ] = 0;
