@@ -78,22 +78,24 @@ int main(int argc, char **argv){
 	findFundamentalMat( pts1, pts2, CV_FM_RANSAC, 3.0, 0.99, status );
 	cout << status << endl;
 	
-	vector< DMatch > matches_inl;
-	int count = 0;
-	for ( int i = 0; i < status.cols; ++i ){
-		if ( status.at< char >( i ) ){
-			matches_inl.push_back( matches[ i ] );
-			++count;
-		}
-	}
-	cout << "inlier ratio=" << count / (float) status.cols << endl;
+	// vector< DMatch > matches_inl;
+	// int count = 0;
+	// for ( int i = 0; i < status.cols; ++i ){
+	// 	if ( status.at< char >( i ) ){
+	// 		matches_inl.push_back( matches[ i ] );
+	// 		++count;
+	// 	}
+	// }
+	// cout << "inlier ratio=" << count / (float) status.cols << endl;
+	vector< DMatch > matches_inl( matches.begin(), matches.end() );
 
 	Mat disp;
 	drawMatches( im1, kp1, im2, kp2, matches_inl, disp );
 	imshow( "matches", disp );
 	waitKey();
 
-	count = 0;
+	int t_count = 0;
+	int f_count = 0;
 	for ( int i = 0; i < matches_inl.size(); ++i ){
 		vector< DMatch > tmp;
 		tmp.push_back( matches_inl[ i ] );
@@ -102,10 +104,14 @@ int main(int argc, char **argv){
 		char c;
 		c = waitKey();
 		if ( c == 'y' ){
-			++count;
+			++t_count;
+		}else{
+			if ( c == 'n' ){
+				++f_count;
+			}
 		}
 	}
-	cout << "count/total=" << count / (float) matches_inl.size() << endl;
+	cout << "count/total=" << t_count / (float) ( t_count + f_count ) << endl;
 
 }
 
