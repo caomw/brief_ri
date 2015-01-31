@@ -18,7 +18,7 @@ static const string dataDir("/home/feixh/OpenCV/opencv-2.4.10/samples/cpp/fabmap
 static const string imgroot("/home/feixh/workspace/Data/image/disjoint/");
 int main(int argc, char **argv){
 	
-	if ( argc != 3 ){
+	if ( argc != 5 ){
 		cerr << "need 3 args" << endl;
 		return -1;
 	}
@@ -44,8 +44,12 @@ int main(int argc, char **argv){
 		return -1;
 	}
 
-    BriefRIDescriptorExtractor extractor;
-    extractor.rotatePattern( 30 );
+    BriefRIDescriptorExtractor extractor1;
+    extractor1.rotatePattern( stof( argv[3] ) );
+
+    BriefRIDescriptorExtractor extractor2;
+    extractor2.rotatePattern( stof( argv[4] ) );
+
     Ptr<DescriptorMatcher> matcher = new BFMatcher( NORM_HAMMING, true );
 
 	vector< KeyPoint > kp1;
@@ -53,14 +57,14 @@ int main(int argc, char **argv){
 	sort( kp1.begin(), kp1.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp1.resize( MAX_FAST_FEATURES );
 	Mat desc1;
-	extractor.compute( im1, kp1, desc1 );
+	extractor1.compute( im1, kp1, desc1 );
 
 	vector< KeyPoint > kp2;
 	FAST( im2, kp2, FAST_THRESH );
 	sort( kp2.begin(), kp2.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp2.resize( MAX_FAST_FEATURES );
 	Mat desc2;
-	extractor.compute( im2, kp2, desc2 );
+	extractor2.compute( im2, kp2, desc2 );
 
 	vector< DMatch > matches;
 	matcher->match( desc1, desc2, matches );
