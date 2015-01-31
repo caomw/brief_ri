@@ -15,7 +15,7 @@ using namespace cv;
 static const int FAST_THRESH = 20;
 static const int MAX_FAST_FEATURES = 500;
 static const string dataDir("/home/feixh/OpenCV/opencv-2.4.10/samples/cpp/fabmap/");
-static const string imgroot("/home/feixh/workspace/Data/image/disjoint/");
+static const string imgroot("./");
 int main(int argc, char **argv){
 	
 	if ( argc != 5 ){
@@ -35,6 +35,9 @@ int main(int argc, char **argv){
 	ss.str("");
 	ss.clear();
 
+	float t1 = stof( argv[3] );
+	float t2 = stof( argv[4] );
+
 
 	Mat im1, im2;
 	im1 = imread( im1_file, CV_LOAD_IMAGE_GRAYSCALE );
@@ -45,10 +48,8 @@ int main(int argc, char **argv){
 	}
 
     BriefRIDescriptorExtractor extractor1;
-    extractor1.rotatePattern( stof( argv[3] ) );
 
     BriefRIDescriptorExtractor extractor2;
-    extractor2.rotatePattern( stof( argv[4] ) );
 
     Ptr<DescriptorMatcher> matcher = new BFMatcher( NORM_HAMMING, true );
 
@@ -56,6 +57,9 @@ int main(int argc, char **argv){
 	FAST( im1, kp1, FAST_THRESH );
 	sort( kp1.begin(), kp1.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp1.resize( MAX_FAST_FEATURES );
+	for ( auto & kp: kp1 ){
+		kp.angle = t1;
+	}
 	Mat desc1;
 	extractor1.compute( im1, kp1, desc1 );
 
@@ -63,6 +67,9 @@ int main(int argc, char **argv){
 	FAST( im2, kp2, FAST_THRESH );
 	sort( kp2.begin(), kp2.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp2.resize( MAX_FAST_FEATURES );
+	for ( auto & kp: kp2 ){
+		kp.angle = t2;
+	}
 	Mat desc2;
 	extractor2.compute( im2, kp2, desc2 );
 
@@ -78,16 +85,16 @@ int main(int argc, char **argv){
 	findFundamentalMat( pts1, pts2, CV_FM_RANSAC, 3.0, 0.99, status );
 	cout << status << endl;
 	
-	// vector< DMatch > matches_inl;
-	// int count = 0;
-	// for ( int i = 0; i < status.cols; ++i ){
-	// 	if ( status.at< char >( i ) ){
-	// 		matches_inl.push_back( matches[ i ] );
-	// 		++count;
-	// 	}
-	// }
-	// cout << "inlier ratio=" << count / (float) status.cols << endl;
-	vector< DMatch > matches_inl( matches.begin(), matches.end() );
+	vector< DMatch > matches_inl;
+	int count = 0;
+	for ( int i = 0; i < status.cols; ++i ){
+		if ( status.at< char >( i ) ){
+			matches_inl.push_back( matches[ i ] );
+			++count;
+		}
+	}
+	cout << "inlier ratio=" << count / (float) status.cols << endl;
+	// vector< DMatch > matches_inl( matches.begin(), matches.end() );
 
 	Mat disp;
 	drawMatches( im1, kp1, im2, kp2, matches_inl, disp );

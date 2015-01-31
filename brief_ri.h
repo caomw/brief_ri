@@ -6,7 +6,6 @@
 class BriefRIDescriptorExtractor: public cv::BriefDescriptorExtractor{
 public:
     BriefRIDescriptorExtractor( int bytes = 32 );
-    void rotatePattern( float theta );
     virtual void read( const cv::FileNode& );
     // virtual void write( FileStorage& ) const;
 
@@ -14,8 +13,7 @@ public:
     // virtual int descriptorType() const;
 protected:
     virtual void computeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors) const;
-    int pattern[512][4];
-    typedef void(*PixelTestWithPatternFn)(const cv::Mat&, const std::vector<cv::KeyPoint>&, cv::Mat&, const int pattern[512][4]);
+    typedef void(*PixelTestWithPatternFn)(const cv::Mat&, const std::vector<cv::KeyPoint>&, cv::Mat&);
     PixelTestWithPatternFn test_pattern_fn_;
 
 };
