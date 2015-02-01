@@ -180,7 +180,9 @@ int main(int argc, char **argv){
 		}
 	}
 	cout << "total=" << t_count + f_count << endl;
-	cout << "count/total=" << t_count / (float) ( t_count + f_count ) << endl;
+	cout << "true positive=" << t_count << endl;
+	cout << "false positive=" << f_count << endl;
+	cout << "true positive/total=" << t_count / (float) ( t_count + f_count ) << endl;
 
 }
 
