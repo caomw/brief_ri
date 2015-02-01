@@ -17,18 +17,20 @@ static const int MAX_FAST_FEATURES = 500;
 static const string dataDir("/home/feixh/OpenCV/opencv-2.4.10/samples/cpp/fabmap/");
 static const string imgroot("./");
 
+static const int SUPPORT_SIZE = 61;
+static const int HALF_SUPPORT_SIZE = ( SUPPORT_SIZE >> 1 );
 bool getRotatedPatch( const Mat &img, Mat &cropped, const KeyPoint& pt, float angle = 0 ){
 	if ( angle== 0 ){
 
 		// no rotation
-		if ( pt.pt.x + 30 >= img.cols || pt.pt.x - 30 < 0 || pt.pt.y + 30 >= img.rows || pt.pt.y - 30 < 0 ){
+		if ( pt.pt.x + HALF_SUPPORT_SIZE >= img.cols || pt.pt.x - HALF_SUPPORT_SIZE < 0 || pt.pt.y + HALF_SUPPORT_SIZE >= img.rows || pt.pt.y - HALF_SUPPORT_SIZE < 0 ){
 			return false;
 		}else{
-			getRectSubPix( img, Size( 61, 61 ), pt.pt, cropped );
+			getRectSubPix( img, Size( SUPPORT_SIZE, SUPPORT_SIZE ), pt.pt, cropped );
 			return true;
 		}
 	}else{
-		RotatedRect rRect = RotatedRect( pt.pt, Size2f( 61, 61 ), angle );
+		RotatedRect rRect = RotatedRect( pt.pt, Size2f( SUPPORT_SIZE, SUPPORT_SIZE ), angle );
 		// get the bounding box of the rotated patch
 		Rect bRect = rRect.boundingRect();
 		Point2f center( bRect.width/2, bRect.height/2 );
@@ -54,6 +56,31 @@ bool getRotatedPatch( const Mat &img, Mat &cropped, const KeyPoint& pt, float an
 		return true;
 	}
 
+}
+
+void computeBriefRI( const Mat &im2, vector< KeyPoint > &kp2, Mat &desc2, float angle ){
+	// when the image is aligned to the gravity, angle = 0
+	// rotate anti-clockwise, angle > 0
+	// rotate clockwise, angle < 0
+	BriefDescriptorExtractor extractor;
+	vector< KeyPoint > kp2_t;
+	for ( auto kp : kp2 ){
+		Mat patch;
+		Mat desc;
+		vector< KeyPoint > tmpKp;
+		if ( getRotatedPatch( im2, patch, kp, -angle ) ){  // notice, here is a negative angle
+			tmpKp.push_back( KeyPoint( HALF_SUPPORT_SIZE, HALF_SUPPORT_SIZE, 1 ) );
+			extractor.compute( patch, tmpKp, desc );
+			if ( ! tmpKp.empty() ){
+				kp2_t.push_back( kp );
+				desc2.push_back( desc );
+				cout << desc << endl;
+			}else{
+				cout << "deleted" << endl;
+			}
+		}
+	}
+	kp2 = kp2_t;
 }
 int main(int argc, char **argv){
 	
@@ -97,51 +124,14 @@ int main(int argc, char **argv){
 	sort( kp1.begin(), kp1.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp1.resize( MAX_FAST_FEATURES );
 	Mat desc1;
-	vector< KeyPoint > kp1_t;
-	for ( auto kp : kp1 ){
-		Mat patch;
-		Mat desc;
-		vector< KeyPoint > tmpKp;
-		if ( getRotatedPatch( im1, patch, kp, -t1 ) ){
-			tmpKp.push_back( KeyPoint( 30, 30, 1 ) );
-			extractor.compute( patch, tmpKp, desc );
-			// imshow( "patch", patch );
-			// waitKey();
-			cout << patch.size() << endl;
-			if ( ! tmpKp.empty() ){
-				kp1_t.push_back( kp );
-				desc1.push_back( desc );
-				cout << desc << endl;
-			}else{
-				cout << "deleted" << endl;
-			}
-		}
-	}
-	kp1 = kp1_t;
+	computeBriefRI( im1, kp1, desc1, t1 );
 
 	vector< KeyPoint > kp2;
 	FAST( im2, kp2, FAST_THRESH );
 	sort( kp2.begin(), kp2.end(), []( const KeyPoint &x, const KeyPoint &y){ return x.response > y.response; } );
 	kp2.resize( MAX_FAST_FEATURES );
 	Mat desc2;
-	vector< KeyPoint > kp2_t;
-	for ( auto kp : kp2 ){
-		Mat patch;
-		Mat desc;
-		vector< KeyPoint > tmpKp;
-		if ( getRotatedPatch( im2, patch, kp, -t2 ) ){
-			tmpKp.push_back( KeyPoint( 30, 30, 1 ) );
-			extractor.compute( patch, tmpKp, desc );
-			if ( ! tmpKp.empty() ){
-				kp2_t.push_back( kp );
-				desc2.push_back( desc );
-				cout << desc << endl;
-			}else{
-				cout << "deleted" << endl;
-			}
-		}
-	}
-	kp2 = kp2_t;
+	computeBriefRI( im2, kp2, desc2, t2 );
 
 
 	vector< DMatch > matches;
