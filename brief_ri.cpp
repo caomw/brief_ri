@@ -42,6 +42,7 @@ static void pixelTests32(const Mat& img, const std::vector<KeyPoint>& keypoints,
 		warpAffine( roi, rotated, M, roi.size(), INTER_LINEAR );
 		Mat cropped;
 		getRectSubPix( rotated, rRect.size, center, cropped );
+		// GaussianBlur( cropped, cropped, Size( 5, 5), 1.5 );
 		// debug
 // #define _DEBUG
 #ifdef _DEBUG
@@ -71,8 +72,8 @@ static void pixelTests32(const Mat& img, const std::vector<KeyPoint>& keypoints,
 }
 
 
-BriefRIDescriptorExtractor::BriefRIDescriptorExtractor(int bytes) :
-    BriefDescriptorExtractor( bytes ){
+BriefRIDescriptorExtractor::BriefRIDescriptorExtractor( float theta, int bytes) :
+    BriefDescriptorExtractor( bytes ), theta_( theta ){
 
 	test_pattern_fn_ = pixelTests32;
     // switch (bytes)
@@ -140,6 +141,11 @@ void BriefRIDescriptorExtractor::computeImpl(const Mat& image, std::vector<KeyPo
 
     //Remove keypoints very close to the border
     KeyPointsFilter::runByImageBorder(keypoints, image.size(), (int)( (PATCH_SIZE/2 + KERNEL_SIZE/2)*1.414+1 ) );
+	if ( theta_ != 0 ){
+		for ( auto &kp : keypoints ){
+			kp.angle = theta_;
+		}
+	}
 
     descriptors = Mat::zeros((int)keypoints.size(), bytes_, CV_8U);
     test_pattern_fn_(image, keypoints, descriptors);
